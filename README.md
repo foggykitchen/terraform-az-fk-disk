@@ -5,7 +5,7 @@ progressive examples for deploying **Azure Managed Disks** and attaching
 them to **Virtual Machines** in a clean, explicit, and
 architecture-aware way.
 
-It is part of the **[FoggyKitchen.com training ecosystem](https://foggykitchen.com/courses-2/)** and is
+It is part of the **[FoggyKitchen.com training ecosystem](https://foggykitchen.com/courses/azure-fundamentals-terraform-course/)** and is
 designed as a dedicated **storage persistence layer** for Azure compute
 workloads.
 
