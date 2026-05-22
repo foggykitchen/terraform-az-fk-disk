@@ -89,7 +89,7 @@ The goal is **clarity and correctness**, not completeness.
 
 -   [FoggyKitchen Azure Disk Module (terraform-az-fk-disk)](../)
 -   [FoggyKitchen Azure Compute Module
-    (terraform-az-fk-compute)](https://github.com/mlinxfeld/terraform-az-fk-compute)
+    (terraform-az-fk-compute)](https://github.com/foggykitchen/terraform-az-fk-compute)
 -   [FoggyKitchen Azure VNet Module
     (terraform-az-fk-vnet)](https://github.com/foggykitchen/terraform-az-fk-vnet)
 -   [FoggyKitchen Azure Storage Module
