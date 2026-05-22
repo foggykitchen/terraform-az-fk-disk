@@ -93,7 +93,7 @@ The goal is **clarity and correctness**, not completeness.
 -   [FoggyKitchen Azure VNet Module
     (terraform-az-fk-vnet)](https://github.com/foggykitchen/terraform-az-fk-vnet)
 -   [FoggyKitchen Azure Storage Module
-    (terraform-az-fk-storage)](https://github.com/mlinxfeld/terraform-az-fk-storage)
+    (terraform-az-fk-storage)](https://github.com/foggykitchen/terraform-az-fk-storage)
 -   [FoggyKitchen AKS Module
     (terraform-az-fk-aks)](https://github.com/mlinxfeld/terraform-az-fk-aks)
 -   [OCI OKE Module
