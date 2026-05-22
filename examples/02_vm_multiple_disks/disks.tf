@@ -1,7 +1,7 @@
 
 module "data_disk" {
   for_each = var.data_disks
-  source = "github.com/mlinxfeld/terraform-az-fk-disk"
+  source = "github.com/foggykitchen/terraform-az-fk-disk"
 
   name                = "${var.disk_name}-${each.key}"
   resource_group_name = azurerm_resource_group.foggykitchen_rg.name

@@ -76,7 +76,7 @@ terraform-az-fk-disk/
 
 ``` hcl
 module "data_disk" {
-  source = "git::https://github.com/mlinxfeld/terraform-az-fk-disk.git?ref=v1.0.0"
+  source = "git::https://github.com/foggykitchen/terraform-az-fk-disk.git?ref=v1.0.0"
 
   name                = "fkdisk-data01"
   location            = "westeurope"
@@ -129,11 +129,11 @@ disks actually behave in Azure.
 
 ## 🧩 Related Modules & Training
 
--   [terraform-az-fk-vnet](https://github.com/mlinxfeld/terraform-az-fk-vnet)
--   [terraform-az-fk-compute](https://github.com/mlinxfeld/terraform-az-fk-compute)
--   [terraform-az-fk-storage](https://github.com/mlinxfeld/terraform-az-fk-storage)
--   [terraform-az-fk-aks](https://github.com/mlinxfeld/terraform-az-fk-aks)
--   [terraform-oci-fk-oke](https://github.com/mlinxfeld/terraform-oci-fk-oke)
+-   [terraform-az-fk-vnet](https://github.com/foggykitchen/terraform-az-fk-vnet)
+-   [terraform-az-fk-compute](https://github.com/foggykitchen/terraform-az-fk-compute)
+-   [terraform-az-fk-storage](https://github.com/foggykitchen/terraform-az-fk-storage)
+-   [terraform-az-fk-aks](https://github.com/foggykitchen/terraform-az-fk-aks)
+-   [terraform-oci-fk-oke](https://github.com/foggykitchen/terraform-oci-fk-oke)
 
 ---
 
