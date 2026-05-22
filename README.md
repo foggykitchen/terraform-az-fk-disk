@@ -76,7 +76,7 @@ terraform-az-fk-disk/
 
 ``` hcl
 module "data_disk" {
-  source = "git::https://github.com/mlinxfeld/terraform-az-fk-disk.git?ref=v1.0.0"
+  source = "git::https://github.com/foggykitchen/terraform-az-fk-disk.git?ref=v1.0.0"
 
   name                = "fkdisk-data01"
   location            = "westeurope"
