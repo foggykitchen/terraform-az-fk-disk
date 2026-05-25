@@ -1,73 +1,159 @@
 # Example 02: Single Azure Virtual Machine with Multiple Managed Data Disks
 
-This example extends **Example 01** by attaching **multiple Azure
-Managed Data Disks** to a **single Linux Virtual Machine** using
-**Terraform / OpenTofu**.
+This example demonstrates how to provision a **single Linux Virtual
+Machine** with **multiple Azure Managed Data Disks** using **Terraform /
+OpenTofu**.
 
-The purpose of this example is to demonstrate how Azure models
-**multiple persistent disks** and how they are explicitly attached to a
-VM using **Logical Unit Numbers (LUNs)**.
+It focuses on a storage design problem that starts the moment a VM gets
+more than one persistent disk:
+
+> **multi-disk persistence in Azure is an architectural decision, not
+> just an attachment detail**
+
+This example is the runnable companion to the FoggyKitchen article
+[Azure Managed Disks with Terraform: Designing Multi-Disk VM Persistence (The Right Way)](https://foggykitchen.com/2026/01/21/azure-managed-disks-terraform/).
 
 ------------------------------------------------------------------------
 
-## 🧭 Architecture Overview
+## 🏗️ Architecture Overview
 
-This deployment builds on the same minimal compute and networking
-foundation as the single-disk example, but introduces **multiple data
-disks** attached to the same VM.
+This deployment creates:
+
+-   one **Linux Virtual Machine**
+-   one **OS disk** managed by Azure
+-   two independent **Managed Data Disks**
+-   explicit **LUN-based attachment**
+-   one **Virtual Network** with a public subnet
+
+The goal is to establish a clear persistence model, not to build a full
+platform.
 
 <img src="02-vm-multiple-disks-architecture.png" width="900"/>
 
-This example creates:
-
--   One **Linux Virtual Machine**
--   One **OS Disk** (managed by Azure)
--   Two **Managed Data Disks**
-    -   `data01` attached at **LUN 0**
-    -   `data02` attached at **LUN 1**
--   A basic Virtual Network and subnet
-
-This remains a **compute + storage baseline**, not a production-ready
-architecture.
+*Figure 1. Azure Virtual Machine with multiple Managed Data Disks
+attached using explicit LUN assignments.*
 
 ------------------------------------------------------------------------
 
-## 🎯 Why this example exists
+## 🧩 Module Composition
 
-Many real-world workloads require more than one persistent disk:
+This example is composed from reusable FoggyKitchen modules:
 
--   separation of **application data** and **logs**
--   databases with dedicated data and temp volumes
--   predictable I/O isolation between workloads
+-   `terraform-az-fk-compute` provisions the Linux VM
+-   `terraform-az-fk-vnet` provides the minimal network foundation
+-   `terraform-az-fk-disk` creates and attaches each data disk
 
-This example teaches:
+The modules are independent. The architecture emerges from how they are
+connected:
 
--   how Azure attaches **multiple Managed Disks** to a single VM
--   how **LUN numbering** works in practice
--   how disk size and performance tiers can differ per disk
--   how Terraform models multiple disk attachments cleanly using
-    `for_each`
+-   the compute module exposes `vm_id`
+-   the disk module uses that `vm_id` for attachment
+-   each disk keeps its own size, SKU, and LUN definition
 
-This pattern is foundational for advanced compute designs and for
-understanding persistent volumes in Kubernetes.
+This keeps **compute** and **persistence** concerns separated.
 
 ------------------------------------------------------------------------
 
-## 🚀 Deployment Steps
+## 🎯 What this example teaches
+
+This example shows how to model multi-disk persistence cleanly:
+
+-   disks are separate Azure resources
+-   LUNs are assigned explicitly
+-   disk performance tiers can differ per attachment
+-   the VM lifecycle stays decoupled from disk lifecycle
+
+This matters because Managed Disks are not only VM properties. They are
+first-class Azure resources that should be designed intentionally.
+
+------------------------------------------------------------------------
+
+## Declarative Disk Definition
+
+Disks are defined as input data, not hardcoded resources:
+
+```hcl
+variable "data_disks" {
+  type = map(object({
+    size_gb = number
+    sku     = string
+    lun     = number
+  }))
+}
+```
+
+Example configuration used by this example:
+
+```hcl
+data_disks = {
+  data01 = {
+    size_gb = 64
+    sku     = "Premium_LRS"
+    lun     = 0
+  }
+  data02 = {
+    size_gb = 128
+    sku     = "Premium_LRS"
+    lun     = 1
+  }
+}
+```
+
+This gives you predictable device mapping and makes it easy to add or
+modify disks without rewriting the VM definition.
+
+------------------------------------------------------------------------
+
+## Attaching Multiple Disks with the Module
+
+The core pattern in this example is a `for_each` loop over the disk
+definition map:
+
+```hcl
+module "data_disk" {
+  for_each = var.data_disks
+  source   = "github.com/foggykitchen/terraform-az-fk-disk"
+
+  name                = "${var.disk_name}-${each.key}"
+  resource_group_name = azurerm_resource_group.foggykitchen_rg.name
+  location            = azurerm_resource_group.foggykitchen_rg.location
+  tags                = var.tags
+
+  disk_size_gb         = each.value.size_gb
+  storage_account_type = each.value.sku
+
+  attach_to_vm = true
+  vm_id        = module.compute.vm_id
+
+  lun     = each.value.lun
+  caching = "ReadOnly"
+}
+```
+
+Each disk is:
+
+-   created as a standalone Managed Disk
+-   attached explicitly to the VM
+-   controlled independently from compute logic
+
+------------------------------------------------------------------------
+
+## 🚀 How to Run This Example
 
 From the example directory:
 
-``` bash
+```bash
 tofu init
 tofu plan
 tofu apply
 ```
 
-Terraform will output the public IP address of the VM after deployment.
+After a successful apply, Terraform/OpenTofu will output the public IP
+address of the VM.
 
 ------------------------------------------------------------------------
 
-## 🖼️ Azure Portal Verification
+## 🔍 What to Validate
 
 After deployment, navigate to:
 
@@ -75,44 +161,66 @@ After deployment, navigate to:
 
 You should observe:
 
--   One **OS disk**
--   Two **data disks** attached to the VM
--   Each disk attached at a distinct **LUN**
--   Different disk sizes and performance characteristics
+-   one OS disk
+-   two data disks attached to the same VM
+-   `fkdisk-data01` attached at **LUN 0**
+-   `fkdisk-data02` attached at **LUN 1**
+-   separate size and performance settings per disk
 
 <img src="02-vm-multiple-disks-portal.png" width="900"/>
 
-*Figure 1. Linux Virtual Machine with multiple Managed Data Disks
-attached at distinct LUNs.*
+*Figure 2. Azure Portal view showing multiple Managed Data Disks
+attached through explicit LUN assignments.*
 
 ------------------------------------------------------------------------
 
-## 🔍 VM-Level Verification (optional)
+## 🖥️ VM-Level Verification (optional)
 
-Connect to the VM via SSH:
+Connect to the VM:
 
-``` bash
+```bash
 ssh azureuser@<vm_public_ip>
 ```
 
 List block devices:
 
-``` bash
+```bash
 lsblk
 ```
 
-You should see multiple additional block devices corresponding to the
-attached Managed Disks.
+You should see additional block devices corresponding to the attached
+Managed Disks.
 
-Each device represents a **persistent Azure Managed Disk**.
+------------------------------------------------------------------------
+
+## Why this separation matters
+
+With this design:
+
+-   the VM can be recreated without redefining storage intent
+-   disks can evolve independently
+-   snapshots and backups are easier to reason about
+-   persistence becomes visible in code, not hidden inside the VM
+
+That is the main idea behind the related article:
+[Azure Managed Disks with Terraform: Designing Multi-Disk VM Persistence (The Right Way)](https://foggykitchen.com/2026/01/21/azure-managed-disks-terraform/).
+
+------------------------------------------------------------------------
+
+## Related Resources
+
+-   [Azure Managed Disks with Terraform: Designing Multi-Disk VM Persistence (The Right Way)](https://foggykitchen.com/2026/01/21/azure-managed-disks-terraform/)
+-   [terraform-az-fk-disk](https://github.com/foggykitchen/terraform-az-fk-disk)
+-   [terraform-az-fk-compute](https://github.com/foggykitchen/terraform-az-fk-compute)
+-   [terraform-az-fk-vnet](https://github.com/foggykitchen/terraform-az-fk-vnet)
 
 ------------------------------------------------------------------------
 
 ## 🧹 Cleanup
 
-Remove all resources when finished:
+When finished, remove all resources:
 
-``` bash
+```bash
 tofu destroy
 ```
 
