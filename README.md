@@ -9,6 +9,8 @@ It is part of the **[FoggyKitchen.com training ecosystem](https://foggykitchen.c
 designed as a dedicated **storage persistence layer** for Azure compute
 workloads.
 
+This module is also part of the **[Azure Fundamentals with Terraform/OpenTofu — Build Real-World Azure Architectures with Reusable Modules (2026 Edition)](https://foggykitchen.com/courses/azure-fundamentals-terraform-course/)** course. In the training, it is used to show how persistent storage is modeled separately from virtual machines while still composing cleanly with compute-focused modules.
+
 ---
 
 ## 🎯 Purpose
